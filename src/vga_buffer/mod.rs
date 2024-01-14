@@ -1,3 +1,7 @@
+
+use alloc::string::String;
+use alloc::{format, vec};
+use alloc::vec::Vec;
 use core::fmt;
 use lazy_static::lazy_static;
 use spin::Mutex;
@@ -72,6 +76,12 @@ struct ScreenChar {
     color_code: ColorCode,
 }
 
+impl ScreenChar {
+    pub fn new(ascii_character: u8, color_code: ColorCode) -> Self {
+        Self { ascii_character, color_code }
+    }
+}
+
 #[repr(transparent)]
 struct Buffer {
     chars: [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
@@ -87,9 +97,7 @@ impl Writer {
     pub fn write_string(&mut self, s: &str) {
         for byte in s.bytes() {
             match byte {
-                // printable ASCII byte or newline
                 0x20..=0x7e | b'\n' => self.write_byte(byte),
-                // not part of printable ASCII range
                 _ => self.write_byte(0xfe),
             }
         }
@@ -142,6 +150,55 @@ impl fmt::Write for Writer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.write_string(s);
         Ok(())
+    }
+}
+
+
+struct BufferTTY {
+    chars: Vec<Vec<Volatile<ScreenChar>>>,
+}
+
+impl BufferTTY {
+    pub fn new() -> Self {
+        let vec = vec![vec![Volatile::new(ScreenChar::new(0, ColorCode::new(Color::Green, Color::Black))); BUFFER_WIDTH]; BUFFER_HEIGHT];
+        Self {
+            chars: vec,
+        }
+    }
+}
+
+pub struct TTY {
+    is_active: bool,
+    name: String,
+    buffer: BufferTTY,
+    column_position: usize,
+    color_code: ColorCode,
+}
+
+impl TTY {
+    pub fn new(name: &str) -> Self {
+        Self {
+            buffer: BufferTTY::new(),
+            name: String::from(name),
+            is_active : false,
+            column_position: 0,
+            color_code: ColorCode::new(Color::Green, Color::Black),
+        }
+    }
+}
+
+
+pub struct ManagerTTY {
+    ttys: Vec<TTY>,
+}
+
+impl ManagerTTY {
+    pub fn new() -> Self {
+        let mut vec = vec![];
+        for i in 1..=12 {
+            vec.push(TTY::new(format!("tty-{}", i).as_str()))
+        }
+        Self { ttys: vec }
     }
 }
 
