@@ -27,7 +27,7 @@ pub fn test_runner(tests: &[&dyn Testable]) {
 }
 
 pub trait Testable {
-    fn run(&self) -> ();
+    fn run(&self);
 }
 
 impl<T> Testable for T

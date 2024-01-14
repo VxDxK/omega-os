@@ -18,16 +18,12 @@ mod allocator;
 mod util;
 mod task;
 
-use alloc::rc::Rc;
-use alloc::vec;
-use alloc::vec::Vec;
 use core::panic::PanicInfo;
 use bootloader::{BootInfo, entry_point};
 use x86_64::{structures::paging::Page, VirtAddr};
 use crate::memory::BootInfoFrameAllocator;
 use crate::task::simple_executor::SimpleExecutor;
 use crate::task::Task;
-use crate::vga_buffer::TTY;
 
 #[cfg(not(test))]
 #[panic_handler]
